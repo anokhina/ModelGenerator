@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.project.SourceGroup;
 import org.openide.filesystems.FileObject;
 import org.openide.loaders.DataObject;
@@ -49,9 +50,11 @@ public abstract class BaseAction implements ActionListener {
     }
 
     protected void format(final FileObject editedFile) {
+        this.caretPos = EditorRegistry.lastFocusedComponent().getCaretPosition();
         String selectedStr = Util.selectAll();
         
         Util.setSelectedString(getFormatted(editedFile, selectedStr));
+        EditorRegistry.lastFocusedComponent().setCaretPosition(this.caretPos);
     }
     
     @Override
@@ -172,10 +175,13 @@ public abstract class BaseAction implements ActionListener {
 
             }
             sb.append("//=====================end==============================\n");
+            caretPos = sb.length();
             return sb.toString() + selectedString;
         }
         return selectedString;
     }
+    
+    private int caretPos;
     
     protected String getFieldType(final String cls) {
         return Util.getClassNameShort(cls);
