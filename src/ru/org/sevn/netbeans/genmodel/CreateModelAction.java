@@ -39,8 +39,7 @@ import org.openide.util.NbBundle.Messages;
 @Messages("CTL_CreateModelAction=Create Create Model")
 public final class CreateModelAction extends BaseAction {
     
-    @Override
-    protected int useField(Field f, final String clsName) {
+    public static int useFieldCreate(Field f, final String clsName) {
         if (!excludedTypes.contains(clsName)) {
             f.setAccessible(true);
             Annotation[] annotations = f.getAnnotations();
@@ -61,6 +60,11 @@ public final class CreateModelAction extends BaseAction {
             return -1;
         }
         return 0;
+    }
+    
+    @Override
+    protected int useField(Field f, final String clsName) {
+        return useFieldCreate(f, clsName);
     }
     
 }

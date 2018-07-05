@@ -103,6 +103,67 @@ public abstract class BaseAction implements ActionListener {
                 );
     }
     
+    protected void formatJavaModel(final StringBuilder sb, 
+            final SourceGroup sg, 
+            final String srcClassName, 
+            final String editedFileClassNameFull,
+            final String editedFileClassName) {
+
+        final HashSet<String> usedClasses = makeUsedClasses();
+        final LinkedHashMap<String, String> fields = new LinkedHashMap<>();
+            boolean hasPart = false;
+            Class srcClass = Util.loadClassAny(srcClassName, sg.getRootFolder());
+            if (srcClass != null) {
+                for (Field f : srcClass.getDeclaredFields()) {
+                    if (!isExcluded(f)) {
+                        final String clsName = f.getType().getName().toString();
+                        final int useField = useField(f, clsName);
+                        if (useField > 0) {
+                            fields.put(f.getName(), clsName);
+                            if (addInUsed(f)) {
+                                usedClasses.add(clsName);
+                            }
+                        } else if (useField < 0 && !hasPart) {
+                            hasPart = true;
+                        }
+                    }
+                }
+            }
+            usedClasses.remove(editedFileClassNameFull);
+            for (Iterator<String> it = usedClasses.iterator(); it.hasNext();) {
+                String cl = it.next();
+                sb.append("import ").append(cl).append(";").append("\n");
+            }
+            sb.append("\n");
+            sb.append("public class ").append(editedFileClassName).append("{").append("\n");
+            sb.append("\n");
+            if (hasPart(hasPart)) {
+                sb.append("    private final Modify").append(Util.getClassNameShort(srcClassName)).append("Model part = new Modify").append(Util.getClassNameShort(srcClassName)).append("Model ()").append(";").append("\n");
+                sb.append("\n");
+                sb.append("    public Modify").append(Util.getClassNameShort(srcClassName)).append("Model getPart").append("() {").append("\n");
+                sb.append("        return this.part").append(";").append("\n");
+                sb.append("    }").append("\n");
+                sb.append("\n");
+            }
+            for (String k : fields.keySet()) {
+                final String cls = fields.get(k);
+                sb.append("    private ").append(getFieldType(Util.getClassNameShort(cls))).append(" ").append(k).append(";").append("\n");
+            }
+            for (String k : fields.keySet()) {
+                final String cls = fields.get(k);
+                sb.append("\n");
+                sb.append("    public ").append(getFieldType(cls)).append(" get").append(Util.toCamelCase(k)).append("() {").append("\n");
+                sb.append("        return ").append(k).append(";").append("\n");
+                sb.append("    }").append("\n");
+                sb.append("\n");
+                sb.append("    public ").append("void").append(" set").append(Util.toCamelCase(k)).append("(final ").append(Util.getClassNameShort(cls)).append(" o) {").append("\n");
+                sb.append("        this.").append(k).append(" = ").append(getSetterSet("o")).append(";").append("\n");
+                sb.append("    }").append("\n");
+            }
+            sb.append("\n");
+            sb.append("}\n");
+    }
+    
     protected String formatJava(final FileObject editedFile, final String selectedString) {
         final SourceGroup sg = Util.getSourceGroup(editedFile);
         if (sg != null) {
@@ -112,8 +173,6 @@ public abstract class BaseAction implements ActionListener {
             final String beginStr = "//<gen>";
             final String endStr = "</gen>";
             final StringBuilder sb = new StringBuilder();
-            final HashSet<String> usedClasses = makeUsedClasses();
-            final LinkedHashMap<String, String> fields = new LinkedHashMap<>();
             if (selectedString.startsWith(beginStr)) {
                 final int endName = selectedString.indexOf(endStr);
                 final String srcClassName = selectedString.substring(beginStr.length(), endName);
@@ -121,58 +180,7 @@ public abstract class BaseAction implements ActionListener {
                 sb.append("package ").append(editedFilePackage).append(";").append("\n");
                 sb.append("\n");
 
-                boolean hasPart = false;
-                Class srcClass = Util.loadClassAny(srcClassName, sg.getRootFolder());
-                if (srcClass != null) {
-                    for (Field f : srcClass.getDeclaredFields()) {
-                        if (!isExcluded(f)) {
-                            final String clsName = f.getType().getName().toString();
-                            final int useField = useField(f, clsName);
-                            if (useField > 0) {
-                                fields.put(f.getName(), clsName);
-                                if (addInUsed(f)) {
-                                    usedClasses.add(clsName);
-                                }
-                            } else if (useField < 0 && !hasPart) {
-                                hasPart = true;
-                            }
-                        }
-                    }
-                }
-                usedClasses.remove(editedFileClassNameFull);
-                for (Iterator<String> it = usedClasses.iterator(); it.hasNext();) {
-                    String cl = it.next();
-                    sb.append("import ").append(cl).append(";").append("\n");
-                }
-                sb.append("\n");
-                sb.append("public class ").append(editedFileClassName).append("{").append("\n");
-                sb.append("\n");
-                if (hasPart(hasPart)) {
-                    sb.append("    private final Modify").append(Util.getClassNameShort(srcClassName)).append("Model part = new Modify").append(Util.getClassNameShort(srcClassName)).append("Model ()").append(";").append("\n");
-                    sb.append("\n");
-                    sb.append("    public Modify").append(Util.getClassNameShort(srcClassName)).append("Model getPart").append("() {").append("\n");
-                    sb.append("        return this.part").append(";").append("\n");
-                    sb.append("    }").append("\n");
-                    sb.append("\n");
-                }
-                for (String k : fields.keySet()) {
-                    final String cls = fields.get(k);
-                    sb.append("    private ").append(getFieldType(Util.getClassNameShort(cls))).append(" ").append(k).append(";").append("\n");
-                }
-                for (String k : fields.keySet()) {
-                    final String cls = fields.get(k);
-                    sb.append("\n");
-                    sb.append("    public ").append(getFieldType(cls)).append(" get").append(Util.toCamelCase(k)).append("() {").append("\n");
-                    sb.append("        return ").append(k).append(";").append("\n");
-                    sb.append("    }").append("\n");
-                    sb.append("\n");
-                    sb.append("    public ").append("void").append(" set").append(Util.toCamelCase(k)).append("(final ").append(Util.getClassNameShort(cls)).append(" o) {").append("\n");
-                    sb.append("        this.").append(k).append(" = ").append(getSetterSet("o")).append(";").append("\n");
-                    sb.append("    }").append("\n");
-                }
-                sb.append("\n");
-                sb.append("}\n");
-
+                formatJavaModel(sb, sg, srcClassName, editedFileClassNameFull, editedFileClassName);
             }
             sb.append("//=====================end==============================\n");
             caretPos = sb.length();
