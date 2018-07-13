@@ -36,13 +36,13 @@ public abstract class BaseAction implements ActionListener {
         excludedFields.add("serialVersionUID");
     }
     
-    protected String getFormatted(final FileObject editedFile, final String selectedString) {
+    protected String getFormatted(final FileObject editedFile, final String selectedString, final String content) {
         if (editedFile != null) {
             if (editedFile.getExt() != null) {
                 switch(editedFile.getExt().toLowerCase()) {
                     case ".java":
                     case "java":
-                        return formatJava(editedFile, selectedString);
+                        return formatJava(editedFile, selectedString, content);
                 }
             }
         }
@@ -51,9 +51,9 @@ public abstract class BaseAction implements ActionListener {
 
     protected void format(final FileObject editedFile) {
         this.caretPos = EditorRegistry.lastFocusedComponent().getCaretPosition();
-        String selectedStr = Util.selectAll();
+        String selectedStr = EditorRegistry.lastFocusedComponent().getSelectedText();
         
-        Util.setSelectedString(getFormatted(editedFile, selectedStr));
+        Util.setSelectedString(getFormatted(editedFile, selectedStr, Util.selectAll()));
         EditorRegistry.lastFocusedComponent().setCaretPosition(this.caretPos);
     }
     
@@ -137,6 +137,7 @@ public abstract class BaseAction implements ActionListener {
             sb.append("\n");
             sb.append("public class ").append(editedFileClassName).append("{").append("\n");
             sb.append("\n");
+            addConstructor(editedFileClassName, sb);
             if (hasPart(hasPart)) {
                 sb.append("    private final Modify").append(Util.getClassNameShort(srcClassName)).append("Model part = new Modify").append(Util.getClassNameShort(srcClassName)).append("Model ()").append(";").append("\n");
                 sb.append("\n");
@@ -156,37 +157,52 @@ public abstract class BaseAction implements ActionListener {
                 sb.append("        return ").append(k).append(";").append("\n");
                 sb.append("    }").append("\n");
                 sb.append("\n");
-                sb.append("    public ").append("void").append(" set").append(Util.toCamelCase(k)).append("(final ").append(Util.getClassNameShort(cls)).append(" o) {").append("\n");
-                sb.append("        this.").append(k).append(" = ").append(getSetterSet("o")).append(";").append("\n");
-                sb.append("    }").append("\n");
+                appendSetter(editedFileClassName, sb, k, cls);
             }
             sb.append("\n");
             sb.append("}\n");
     }
     
-    protected String formatJava(final FileObject editedFile, final String selectedString) {
+    protected void addConstructor(final String editedFileClassName, final StringBuilder sb) {
+        sb.append("    private ").append(editedFileClassName).append("(){}").append("\n");
+        sb.append("    public static ").append(editedFileClassName).append(" create(){ ").append("\n");
+        sb.append("        return new ").append(editedFileClassName).append("();").append("\n");
+        sb.append("    }").append("\n");
+        sb.append("\n");
+    }
+    
+    protected void appendSetter(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls) {
+        appendSetterRaw(editedFileClassName, sb, paramName, Util.getClassNameShort(cls), "<T extends " + editedFileClassName + "> T", getSetterSet("o"));
+    }
+    
+    protected void appendSetterRaw(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls, final String returnType, final String setterSet) {
+        sb.append("    public ").append(returnType).append(" set").append(Util.toCamelCase(paramName)).append("(final ").append(cls).append(" o) {").append("\n");
+        sb.append("        this.").append(paramName).append(" = ").append(setterSet).append(";").append("\n");
+        if (!"void".equals(returnType)) {
+            sb.append("        return (T)this;").append("\n");
+        }
+        sb.append("    }").append("\n");
+    }
+    
+    protected String formatJava(final FileObject editedFile, final String srcClassName, final String content) {
         final SourceGroup sg = Util.getSourceGroup(editedFile);
         if (sg != null) {
             final String editedFileClassNameFull = Util.getClassName(editedFile);
             final String editedFileClassName = Util.getClassNameShort(editedFileClassNameFull);
             final String editedFilePackage = Util.getPackage(editedFileClassNameFull);
-            final String beginStr = "//<gen>";
-            final String endStr = "</gen>";
             final StringBuilder sb = new StringBuilder();
-            if (selectedString.startsWith(beginStr)) {
-                final int endName = selectedString.indexOf(endStr);
-                final String srcClassName = selectedString.substring(beginStr.length(), endName);
-                sb.append(beginStr).append(srcClassName).append(endStr).append("\n");
+            if (srcClassName != null) {
                 sb.append("package ").append(editedFilePackage).append(";").append("\n");
                 sb.append("\n");
 
                 formatJavaModel(sb, sg, srcClassName, editedFileClassNameFull, editedFileClassName);
             }
+            sb.append("//").append(srcClassName).append("\n");
             sb.append("//=====================end==============================\n");
             caretPos = sb.length();
-            return sb.toString() + selectedString;
+            return sb.toString() + content;
         }
-        return selectedString;
+        return content;
     }
     
     private int caretPos;

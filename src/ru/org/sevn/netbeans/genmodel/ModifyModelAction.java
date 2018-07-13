@@ -90,4 +90,11 @@ public final class ModifyModelAction extends BaseAction {
         ret.add(Optional.class.getName());
         return ret;
     }
+
+    @Override
+    protected void appendSetter(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls) {
+        final String clsShort = Util.getClassNameShort(cls);
+        appendSetterRaw(editedFileClassName, sb, paramName, clsShort, "<T extends " + editedFileClassName + "> T", getSetterSet("o"));
+        appendSetterRaw(editedFileClassName, sb, paramName, "Optional<" + clsShort +">", "<T extends " + editedFileClassName + "> T", "o");
+    }
 }
