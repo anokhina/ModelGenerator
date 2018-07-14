@@ -159,11 +159,14 @@ public abstract class BaseAction implements ActionListener {
             sb.append("\n");
             addConstructor(editedFileClassName, sb);
             if (hasPart(hasPart)) {
-                sb.append("    private final Modify").append(Util.getClassNameShort(srcClassName)).append("Model part = new Modify").append(Util.getClassNameShort(srcClassName)).append("Model ()").append(";").append("\n");
+                sb.append("    private Modify").append(Util.getClassNameShort(srcClassName)).append("Model part = Modify").append(Util.getClassNameShort(srcClassName)).append("Model.create ()").append(";").append("\n");
                 sb.append("\n");
-                sb.append("    public Modify").append(Util.getClassNameShort(srcClassName)).append("Model getPart").append("() {").append("\n");
-                sb.append("        return this.part").append(";").append("\n");
-                sb.append("    }").append("\n");
+                appendGetter(editedFileClassName, sb, "part", "Modify" + Util.getClassNameShort(srcClassName) + "Model");
+//                sb.append("    public Modify").append(Util.getClassNameShort(srcClassName)).append("Model getPart").append("() {").append("\n");
+//                sb.append("        return this.part").append(";").append("\n");
+//                sb.append("    }").append("\n");
+                sb.append("\n");
+                appendSetterPlain(editedFileClassName, sb, "part", "Modify" + Util.getClassNameShort(srcClassName) + "Model");
                 sb.append("\n");
             }
             for (String k : fields.keySet()) {
@@ -196,6 +199,10 @@ public abstract class BaseAction implements ActionListener {
     }
     
     protected void appendSetter(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls) {
+        appendSetterPlain(editedFileClassName, sb, paramName, cls);
+    }
+    
+    private void appendSetterPlain(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls) {
         appendSetterRaw(editedFileClassName, sb, paramName, Util.getClassNameShort(cls), "<T extends " + editedFileClassName + "> T", getSetterSet("o"));
     }
     
