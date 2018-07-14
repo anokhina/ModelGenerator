@@ -18,9 +18,12 @@ package ru.org.sevn.netbeans.genmodel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.project.SourceGroup;
 import org.openide.filesystems.FileObject;
@@ -34,6 +37,7 @@ public abstract class BaseAction implements ActionListener {
     static {
         excludedTypes.add("org.eclipse.persistence.indirection.WeavedAttributeValueHolderInterface");
         excludedFields.add("serialVersionUID");
+        excludedFields.add("recordId");
     }
     
     protected String getFormatted(final FileObject editedFile, final String selectedString, final String content) {
@@ -92,6 +96,9 @@ public abstract class BaseAction implements ActionListener {
         if (excludedFields.contains(f.getName())) {
             return true;
         }
+        if (f.getName().startsWith("_persistence_")) {
+            return true;
+        }
         return false;
     }
     
@@ -101,6 +108,16 @@ public abstract class BaseAction implements ActionListener {
                 f.getType().isSynthetic() ||
                 f.getType().getName().startsWith("java.lang.")
                 );
+    }
+    
+    public static List<Field> getClassFields(final List<Field> fields, final Class cls) {
+        if (cls != null) {
+            fields.addAll(Arrays.asList(cls.getDeclaredFields()));
+            if (!Object.class.equals(cls.getSuperclass())) {
+                return getClassFields(fields, cls.getSuperclass());
+            }
+        }
+        return fields;
     }
     
     protected void formatJavaModel(final StringBuilder sb, 
@@ -114,7 +131,7 @@ public abstract class BaseAction implements ActionListener {
             boolean hasPart = false;
             Class srcClass = Util.loadClassAny(srcClassName, sg.getRootFolder());
             if (srcClass != null) {
-                for (Field f : srcClass.getDeclaredFields()) {
+                for (Field f : getClassFields(new ArrayList<Field>(), srcClass)) {
                     if (!isExcluded(f)) {
                         final String clsName = f.getType().getName().toString();
                         final int useField = useField(f, clsName);
@@ -153,9 +170,7 @@ public abstract class BaseAction implements ActionListener {
             for (String k : fields.keySet()) {
                 final String cls = fields.get(k);
                 sb.append("\n");
-                sb.append("    public ").append(getFieldType(cls)).append(" get").append(Util.toCamelCase(k)).append("() {").append("\n");
-                sb.append("        return ").append(k).append(";").append("\n");
-                sb.append("    }").append("\n");
+                appendGetter(editedFileClassName, sb, k, cls);
                 sb.append("\n");
                 appendSetter(editedFileClassName, sb, k, cls);
             }
@@ -171,6 +186,12 @@ public abstract class BaseAction implements ActionListener {
         sb.append("\n");
     }
     
+    protected void appendGetter(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls) {
+        sb.append("    public ").append(getFieldType(cls)).append(" get").append(Util.toCamelCase(paramName)).append("() {").append("\n");
+        sb.append("        return ").append(paramName).append(";").append("\n");
+        sb.append("    }").append("\n");
+    }
+    
     protected void appendSetter(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls) {
         appendSetterRaw(editedFileClassName, sb, paramName, Util.getClassNameShort(cls), "<T extends " + editedFileClassName + "> T", getSetterSet("o"));
     }
@@ -184,20 +205,28 @@ public abstract class BaseAction implements ActionListener {
         sb.append("    }").append("\n");
     }
     
-    protected String formatJava(final FileObject editedFile, final String srcClassName, final String content) {
+    protected String formatJava(final FileObject editedFile, final String selection, final String content) {
         final SourceGroup sg = Util.getSourceGroup(editedFile);
         if (sg != null) {
             final String editedFileClassNameFull = Util.getClassName(editedFile);
             final String editedFileClassName = Util.getClassNameShort(editedFileClassNameFull);
             final String editedFilePackage = Util.getPackage(editedFileClassNameFull);
             final StringBuilder sb = new StringBuilder();
-            if (srcClassName != null) {
-                sb.append("package ").append(editedFilePackage).append(";").append("\n");
-                sb.append("\n");
+            if (selection != null) {
+                final String selectionClear = selection.trim();
+                final String[] selections = selectionClear.split("\\s+");
+                if (selections.length > 1) {
+                    appendGetter(editedFileClassName, sb, selections[1], selections[0]);
+                    appendSetter(editedFileClassName, sb, selections[1], selections[0]);
+                } else {
+                
+                    sb.append("package ").append(editedFilePackage).append(";").append("\n");
+                    sb.append("\n");
 
-                formatJavaModel(sb, sg, srcClassName, editedFileClassNameFull, editedFileClassName);
+                    formatJavaModel(sb, sg, selectionClear, editedFileClassNameFull, editedFileClassName);
+                }
             }
-            sb.append("//").append(srcClassName).append("\n");
+            sb.append("//").append(selection).append("\n");
             sb.append("//=====================end==============================\n");
             caretPos = sb.length();
             return sb.toString() + content;
