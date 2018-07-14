@@ -56,6 +56,9 @@ public abstract class BaseAction implements ActionListener {
     protected void format(final FileObject editedFile) {
         this.caretPos = EditorRegistry.lastFocusedComponent().getCaretPosition();
         String selectedStr = EditorRegistry.lastFocusedComponent().getSelectedText();
+        if (selectedStr == null || selectedStr.trim().length() == 0) {
+            selectedStr = Util.getClipboardString();
+        }
         
         Util.setSelectedString(getFormatted(editedFile, selectedStr, Util.selectAll()));
         EditorRegistry.lastFocusedComponent().setCaretPosition(this.caretPos);

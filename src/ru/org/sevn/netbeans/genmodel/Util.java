@@ -15,7 +15,13 @@
  */
 package ru.org.sevn.netbeans.genmodel;
 
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.java.classpath.ClassPath;
@@ -26,12 +32,15 @@ import org.netbeans.api.project.SourceGroup;
 import org.netbeans.api.project.ui.OpenProjects;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
+import org.openide.awt.StatusDisplayer;
 import org.openide.filesystems.FileObject;
 import org.openide.filesystems.FileUtil;
 import org.openide.loaders.DataObject;
 import org.openide.loaders.DataShadow;
+import org.openide.util.Exceptions;
 import org.openide.util.Lookup;
 import org.openide.util.Utilities;
+import org.openide.util.datatransfer.ExClipboard;
 import org.openide.windows.Mode;
 import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
@@ -237,4 +246,39 @@ public class Util {
     public static Project[] getOpenedProjects() {
         return OpenProjects.getDefault().getOpenProjects();
     }
+
+    public static String getClipboardString() {
+        final Clipboard clipboard = getClipboard();
+        if (clipboard != null) {
+            try {
+                return (String)clipboard.getData(DataFlavor.stringFlavor);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                //Exceptions.printStackTrace(ex);
+            }
+        }
+        return null;
+    }
+    
+    public static Clipboard getClipboard() {
+        final Clipboard clipboard = Lookup.getDefault().lookup(ExClipboard.class);
+        if (clipboard == null) {
+            return Toolkit.getDefaultToolkit().getSystemClipboard();
+        }
+        return clipboard;
+    }
+    
+    public static void setClipboardContents(final String content) {
+        final Clipboard clipboard = getClipboard();
+        if (clipboard != null) {
+            if (content == null) {
+                StatusDisplayer.getDefault().setStatusText("");
+                clipboard.setContents(null, null);
+            } else {
+                StatusDisplayer.getDefault().setStatusText("Clipboard: " + content);
+                clipboard.setContents(new StringSelection(content), null);
+            }
+        }
+    }
 }
+//https://platform.netbeans.org/tutorials/nbm-copyfqn.html
