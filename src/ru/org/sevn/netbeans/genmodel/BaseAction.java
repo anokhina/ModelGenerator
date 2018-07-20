@@ -85,7 +85,7 @@ public abstract class BaseAction implements ActionListener {
         Util.err("Can't find file name");
     }
 
-    protected abstract int useField(final Field f, final String clsName);
+    protected abstract int useField(final Field f, final String clsName, final String editedFileClassName);
     
     protected boolean hasPart(final boolean hasPart) {
         return hasPart;
@@ -123,6 +123,17 @@ public abstract class BaseAction implements ActionListener {
         return fields;
     }
     
+    protected String getExtends (final String editedFileClassName) {
+        return "";
+    }
+    
+    protected String getClassNameWithAccess(final String editedFileClassName) {
+        if (editedFileClassName.startsWith("Abstract")) {
+            return "public abstract class " + editedFileClassName + getExtends(editedFileClassName);
+        }
+        return "public class " + editedFileClassName + getExtends(editedFileClassName);
+    }
+    
     protected void formatJavaModel(final StringBuilder sb, 
             final SourceGroup sg, 
             final String srcClassName, 
@@ -137,7 +148,7 @@ public abstract class BaseAction implements ActionListener {
                 for (Field f : getClassFields(new ArrayList<Field>(), srcClass)) {
                     if (!isExcluded(f)) {
                         final String clsName = f.getType().getName().toString();
-                        final int useField = useField(f, clsName);
+                        final int useField = useField(f, clsName, editedFileClassName);
                         if (useField > 0) {
                             fields.put(f.getName(), clsName);
                             if (addInUsed(f)) {
@@ -149,22 +160,21 @@ public abstract class BaseAction implements ActionListener {
                     }
                 }
             }
+            
             usedClasses.remove(editedFileClassNameFull);
             for (Iterator<String> it = usedClasses.iterator(); it.hasNext();) {
                 String cl = it.next();
                 sb.append("import ").append(cl).append(";").append("\n");
             }
             sb.append("\n");
-            sb.append("public class ").append(editedFileClassName).append("{").append("\n");
+            // public class ClassName extends AbstractClassName
+            sb.append(getClassNameWithAccess(editedFileClassName)).append("{").append("\n");
             sb.append("\n");
             addConstructor(editedFileClassName, sb);
             if (hasPart(hasPart)) {
                 sb.append("    private Modify").append(Util.getClassNameShort(srcClassName)).append("Model part = Modify").append(Util.getClassNameShort(srcClassName)).append("Model.create ()").append(";").append("\n");
                 sb.append("\n");
                 appendGetter(editedFileClassName, sb, "part", "Modify" + Util.getClassNameShort(srcClassName) + "Model");
-//                sb.append("    public Modify").append(Util.getClassNameShort(srcClassName)).append("Model getPart").append("() {").append("\n");
-//                sb.append("        return this.part").append(";").append("\n");
-//                sb.append("    }").append("\n");
                 sb.append("\n");
                 appendSetterPlain(editedFileClassName, sb, "part", "Modify" + Util.getClassNameShort(srcClassName) + "Model");
                 sb.append("\n");
@@ -184,12 +194,18 @@ public abstract class BaseAction implements ActionListener {
             sb.append("}\n");
     }
     
+    protected boolean hasConstructor(final String editedFileClassName) {
+        return true;
+    }
+    
     protected void addConstructor(final String editedFileClassName, final StringBuilder sb) {
-        sb.append("    private ").append(editedFileClassName).append("(){}").append("\n");
-        sb.append("    public static ").append(editedFileClassName).append(" create(){ ").append("\n");
-        sb.append("        return new ").append(editedFileClassName).append("();").append("\n");
-        sb.append("    }").append("\n");
-        sb.append("\n");
+        if (hasConstructor(editedFileClassName)) {
+            sb.append("    private ").append(editedFileClassName).append("(){}").append("\n");
+            sb.append("    public static ").append(editedFileClassName).append(" create(){ ").append("\n");
+            sb.append("        return new ").append(editedFileClassName).append("();").append("\n");
+            sb.append("    }").append("\n");
+            sb.append("\n");
+        }
     }
     
     protected void appendGetter(final String editedFileClassName, final StringBuilder sb, final String paramName, final String cls) {
@@ -230,6 +246,7 @@ public abstract class BaseAction implements ActionListener {
                     appendSetter(editedFileClassName, sb, selections[1], selections[0]);
                 } else {
                 
+                    sb.append("//=====================GENERATED========================\n");
                     sb.append("package ").append(editedFilePackage).append(";").append("\n");
                     sb.append("\n");
 

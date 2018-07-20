@@ -15,7 +15,11 @@
  */
 package ru.org.sevn.netbeans.genmodel;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -39,11 +43,59 @@ import org.openide.util.NbBundle.Messages;
 public final class QueryModelAction extends BaseAction {
 
     @Override
-    protected int useField(Field f, final String clsName) {
+    protected int useField(Field f, final String clsName, final String editedFileClassName) {
         if (!excludedTypes.contains(clsName)) {
-            return 1;
+            if (editedFileClassName.startsWith("Abstract")) {
+                if (isSerchable(f)) {
+                    return 1;
+                }
+            }
         }
         return 0;
+    }
+    
+    private boolean isSerchable(final Field f) {
+        Annotation[] annotations = f.getAnnotations();
+        //System.out.println("====1="+f.getName()+":" + annotations.length);
+        if (annotations != null) {
+            for (final Annotation a : annotations) {
+                if (a.annotationType().getName().equals("ru.sifox.objects.Codegen")) {
+                    Method[] methods = a.annotationType().getDeclaredMethods();
+                    if (methods != null) {
+                        for (final Method m : methods) {
+                            if (m.getName().equals("searchable")) {
+                                try {
+                                    Object v = m.invoke(a);
+                                    //System.out.println("====3="+v);
+                                    if (v instanceof Boolean) {
+                                        Boolean b = (Boolean)v;
+                                        return b;
+                                    }
+                                } catch (Exception ex) {
+                                }
+                            }
+                        }
+                    }
+                }
+                //System.out.println("====2="+f.getName()+":" + a + ":" + a.annotationType().getDeclaredMethods().length);
+            }
+        }
+        return false;
+    }
+    
+    @Override
+    protected boolean hasConstructor(final String editedFileClassName) {
+        if (editedFileClassName.startsWith("Abstract")) {
+            return false;
+        } 
+        return true;
+    }
+    
+    protected String getExtends (final String editedFileClassName) {
+        if (!editedFileClassName.startsWith("Abstract")) {
+            return " extends Abstract" + editedFileClassName;
+        }
+        return "";
     }
     
     @Override

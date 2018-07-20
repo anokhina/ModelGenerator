@@ -63,7 +63,7 @@ public final class CreateModelAction extends BaseAction {
     }
     
     @Override
-    protected int useField(Field f, final String clsName) {
+    protected int useField(Field f, final String clsName, final String editedFileClassName) {
         return useFieldCreate(f, clsName);
     }
     

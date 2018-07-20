@@ -64,6 +64,16 @@ public class Util {
         }
     }
 
+    public static String getClassNamePackage(final String className) {
+        if (className != null) {
+            final int lastPoint = className.lastIndexOf(".");
+            if (lastPoint > 0) {
+                return className.substring(0, lastPoint);
+            }
+        }
+        return null;
+    }
+    
     public static String getClassNameShort(final String className) {
         if (className != null) {
             final int lastPoint = className.lastIndexOf(".");
@@ -104,8 +114,8 @@ public class Util {
         return null;
     }
 
-    public static Class loadCompileClass(String name, FileObject fileInProject) throws ClassNotFoundException {
-        ClassPath classPath = ClassPath.getClassPath(fileInProject, ClassPath.COMPILE);
+    public static Class loadClass(String name, FileObject fileInProject, String pathType) throws ClassNotFoundException {
+        ClassPath classPath = ClassPath.getClassPath(fileInProject, pathType);
         if (classPath == null) {
             throw new ClassNotFoundException(name);
         } else {
@@ -113,12 +123,21 @@ public class Util {
         }
     }
 
+    public static Class loadCompileClass(String name, FileObject fileInProject) throws ClassNotFoundException {
+        return loadClass(name, fileInProject, ClassPath.COMPILE);
+    }
+    
     public static Class loadClassAny(String name, FileObject fileInProject) {
-        try {
-            return loadClass(name, fileInProject);
-        } catch (ClassNotFoundException ex) {
-            return null;
+        for (final String pathType : new String[] {ClassPath.COMPILE, ClassPath.SOURCE, ClassPath.EXECUTE}) {
+            try {
+                Class cls = loadClass(name, fileInProject);
+                if (cls != null) {
+                    return cls;
+                }
+            } catch (Throwable ex) {
+            }
         }
+        return null;
     }
 
     public static File getFile(final String className, final SourceGroup sg) {

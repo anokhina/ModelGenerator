@@ -65,7 +65,7 @@ public final class ModifyModelAction extends BaseAction {
     }
     
     @Override
-    protected int useField(Field f, final String clsName) {
+    protected int useField(Field f, final String clsName, final String editedFileClassName) {
         return useFieldModify(f, clsName);
     }
     
