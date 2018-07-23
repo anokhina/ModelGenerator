@@ -18,8 +18,6 @@ package ru.org.sevn.netbeans.genmodel;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -45,7 +43,7 @@ public final class QueryModelAction extends BaseAction {
     @Override
     protected int useField(Field f, final String clsName, final String editedFileClassName) {
         if (!excludedTypes.contains(clsName)) {
-            if (editedFileClassName.startsWith("Abstract")) {
+            if (isAbstract(editedFileClassName)) {
                 if (isSerchable(f)) {
                     return 1;
                 }
@@ -85,17 +83,21 @@ public final class QueryModelAction extends BaseAction {
     
     @Override
     protected boolean hasConstructor(final String editedFileClassName) {
-        if (editedFileClassName.startsWith("Abstract")) {
+        if (isAbstract(editedFileClassName)) {
             return false;
         } 
         return true;
     }
     
     protected String getExtends (final String editedFileClassName) {
-        if (!editedFileClassName.startsWith("Abstract")) {
+        if (!isAbstract(editedFileClassName)) {
             return " extends Abstract" + editedFileClassName;
         }
         return "";
+    }
+    
+    protected boolean isAbstract(final String editedFileClassName) {
+        return editedFileClassName.startsWith("Abstract") || editedFileClassName.endsWith("Service");
     }
     
     @Override
@@ -103,4 +105,8 @@ public final class QueryModelAction extends BaseAction {
         return false;
     }
     
+    @Override
+    protected String getModelPrefix() {
+        return "Query";
+    }
 }

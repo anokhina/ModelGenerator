@@ -67,4 +67,8 @@ public final class CreateModelAction extends BaseAction {
         return useFieldCreate(f, clsName);
     }
     
+    @Override
+    protected String getModelPrefix() {
+        return "Create";
+    }
 }

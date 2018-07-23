@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.project.SourceGroup;
 import org.openide.filesystems.FileObject;
@@ -134,6 +135,53 @@ public abstract class BaseAction implements ActionListener {
         return "public class " + editedFileClassName + getExtends(editedFileClassName);
     }
     
+    protected boolean fillFields(final SourceGroup sg, final String srcClassName, final String editedFileClassName, final HashSet<String> usedClasses, final Map<String, String> fields) {
+        boolean hasPart = false;
+        Class srcClass = Util.loadClassAny(srcClassName, sg.getRootFolder());
+        if (srcClass != null) {
+            for (Field f : getClassFields(new ArrayList<Field>(), srcClass)) {
+                if (!isExcluded(f)) {
+                    final String clsName = f.getType().getName().toString();
+                    final int useField = useField(f, clsName, editedFileClassName);
+                    if (useField > 0) {
+                        fields.put(f.getName(), clsName);
+                        if (addInUsed(f)) {
+                            usedClasses.add(clsName);
+                        }
+                    } else if (useField < 0 && !hasPart) {
+                        hasPart = true;
+                    }
+                }
+            }
+        }
+        return hasPart;
+    }
+    
+    protected void formatModelCreate(final String padding, final String modelPrefix, 
+        final StringBuilder sb, 
+        final SourceGroup sg, 
+        final String srcClassName, 
+        final String editedFileClassNameFull,
+        final String editedFileClassName) {
+
+        final String srcClassNameShort = Util.getClassNameShort(srcClassName);
+        final String modelName = modelPrefix + srcClassNameShort + "Model";
+        sb.append(modelName).append(".create()").append("\n");
+
+        final HashSet<String> usedClasses = makeUsedClasses();
+        final LinkedHashMap<String, String> fields = new LinkedHashMap<>();
+        boolean hasPart = fillFields(sg, srcClassName, editedFileClassName, usedClasses, fields);
+        for (String f : fields.keySet()) {
+            sb.append(padding).append(".set").append(Util.toCamelCase(f)).append("(").append("the").append(Util.toCamelCase(f)).append(")").append("\n");
+        }
+        if (hasPart) {
+            sb.append(padding).append(".setPart(");
+            final ModifyModelAction mmodel = new ModifyModelAction();
+            mmodel.formatModelCreate(padding + "    ", "Modify", sb, sg, srcClassName, editedFileClassNameFull, editedFileClassName);
+            sb.append(padding).append(")\n");
+        }
+    }
+    
     protected void formatJavaModel(final StringBuilder sb, 
             final SourceGroup sg, 
             final String srcClassName, 
@@ -142,24 +190,7 @@ public abstract class BaseAction implements ActionListener {
 
         final HashSet<String> usedClasses = makeUsedClasses();
         final LinkedHashMap<String, String> fields = new LinkedHashMap<>();
-            boolean hasPart = false;
-            Class srcClass = Util.loadClassAny(srcClassName, sg.getRootFolder());
-            if (srcClass != null) {
-                for (Field f : getClassFields(new ArrayList<Field>(), srcClass)) {
-                    if (!isExcluded(f)) {
-                        final String clsName = f.getType().getName().toString();
-                        final int useField = useField(f, clsName, editedFileClassName);
-                        if (useField > 0) {
-                            fields.put(f.getName(), clsName);
-                            if (addInUsed(f)) {
-                                usedClasses.add(clsName);
-                            }
-                        } else if (useField < 0 && !hasPart) {
-                            hasPart = true;
-                        }
-                    }
-                }
-            }
+            boolean hasPart = fillFields(sg, srcClassName, editedFileClassName, usedClasses, fields);
             
             usedClasses.remove(editedFileClassNameFull);
             for (Iterator<String> it = usedClasses.iterator(); it.hasNext();) {
@@ -231,6 +262,10 @@ public abstract class BaseAction implements ActionListener {
         sb.append("    }").append("\n");
     }
     
+    protected String getModelPrefix() {
+        return "";
+    }
+    
     protected String formatJava(final FileObject editedFile, final String selection, final String content) {
         final SourceGroup sg = Util.getSourceGroup(editedFile);
         if (sg != null) {
@@ -244,6 +279,8 @@ public abstract class BaseAction implements ActionListener {
                 if (selections.length > 1) {
                     appendGetter(editedFileClassName, sb, selections[1], selections[0]);
                     appendSetter(editedFileClassName, sb, selections[1], selections[0]);
+                } else if (editedFileClassName.endsWith("Service")) {
+                    formatModelCreate("        ", getModelPrefix(), sb, sg, selectionClear, editedFileClassNameFull, editedFileClassName);
                 } else {
                 
                     sb.append("//=====================GENERATED========================\n");

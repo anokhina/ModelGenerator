@@ -97,4 +97,9 @@ public final class ModifyModelAction extends BaseAction {
         appendSetterRaw(editedFileClassName, sb, paramName, clsShort, "<T extends " + editedFileClassName + "> T", getSetterSet("o"));
         appendSetterRaw(editedFileClassName, sb, paramName, "Optional<" + clsShort +">", "<T extends " + editedFileClassName + "> T", "o");
     }
+
+    @Override
+    protected String getModelPrefix() {
+        return "Modify";
+    }
 }
