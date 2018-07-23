@@ -170,12 +170,16 @@ public final class DaoAction extends BaseAction {
             }
             sb.append(editedFileClassName).append(" extends AbstractDao<").append(Util.getClassNameShort(srcClassName)).append(",").append(getClassName(queryClassName, queryClassNameClass)).append("> {").append("\n");
             sb.append("\n");
-            sb.append("    @PersistenceContext\n");
-            sb.append("    private EntityManager entityManager;\n");
+            sb.append("    private QueryBuilderConfiguration configuration;\n");
             sb.append("\n");
             sb.append("    @Override\n");
             sb.append("    public QueryBuilderConfiguration<").append(Util.getClassNameShort(srcClassName)).append("> getConfiguration() {\n");
-            sb.append("        return new QueryBuilderConfiguration (entityManager, ").append(Util.getClassNameShort(srcClassName)).append(".class);\n");
+            sb.append("        return configuration;\n");
+            sb.append("    }\n");
+            sb.append("\n");
+            sb.append("    @PersistenceContext\n");
+            sb.append("    public void setEntityManager (EntityManager entityManager) {\n");
+            sb.append("        configuration = new QueryBuilderConfiguration (entityManager, ").append(Util.getClassNameShort(srcClassName)).append(".class);\n");
             sb.append("    }\n");
             sb.append("\n");
             printCreate(sb, srcClassName, hasPart, fieldsCreate);
@@ -190,7 +194,7 @@ public final class DaoAction extends BaseAction {
             sb.append("    public ").append(Util.getClassNameShort(srcClassName)).append(" create (final Modify").append(Util.getClassNameShort(srcClassName)).append("Model model) {\n");
             sb.append("        final ").append(Util.getClassNameShort(srcClassName)).append(" entity = update (new ").append(Util.getClassNameShort(srcClassName)).append(" (), model);\n");
             sb.append("\n");
-            sb.append("        return entityManager.merge (entity);\n");
+            sb.append("        return getConfiguration().getEntityManager().merge (entity);\n");
             sb.append("    }\n");
         } else {
             sb.append("    public ").append(Util.getClassNameShort(srcClassName)).append(" create (final Create").append(Util.getClassNameShort(srcClassName)).append("Model model) {\n");
@@ -204,7 +208,7 @@ public final class DaoAction extends BaseAction {
                 sb.append("        entity.set").append(Util.toCamelCase(k)).append(" (model.get").append(Util.toCamelCase(k)).append("());").append("\n");
             }
             sb.append("\n");
-            sb.append("        return entityManager.merge (entity);\n");
+            sb.append("        return getConfiguration().getEntityManager().merge (entity);\n");
             sb.append("    }\n");
         }
     }
