@@ -84,7 +84,7 @@ public final class DaoAction extends BaseAction {
     private Map<String, Map<String, Object>> fillFieldsCodegen(final Class cls, final Map<String, Map<String, Object>> fields) {
         if (cls != null) {
             for (Field f : cls.getDeclaredFields()) {
-                Map<String, Object> cg = CodegenUtil.getCodegen(App.getCodeGenClassName(), f);
+                Map<String, Object> cg = CodegenUtil.getCodegen(App.instance().getCodeGenClassName(), f);
                 if (cg != null && CodegenUtil.isSerchable(cg)) {
                     fields.put(f.getName(), cg);
                 }
@@ -108,7 +108,7 @@ public final class DaoAction extends BaseAction {
             final String editedFileClassName) {
 
         final HashSet<String> usedClasses = makeUsedClasses();
-        App.fillUsedClassDao(usedClasses);
+        App.instance().fillUsedClassDao(usedClasses);
         usedClasses.add("javax.persistence.EntityManager");
         usedClasses.add("javax.persistence.PersistenceContext");
         usedClasses.add("org.springframework.stereotype.Component");

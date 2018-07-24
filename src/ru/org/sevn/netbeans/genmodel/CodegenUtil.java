@@ -65,7 +65,7 @@ public class CodegenUtil {
         return false;
     }
     public static boolean isSerchable(final Field f) {
-        return isSerchable(getCodegen(App.getCodeGenClassName(), f));
+        return isSerchable(getCodegen(App.instance().getCodeGenClassName(), f));
     }
     
 }

@@ -17,8 +17,15 @@ package ru.org.sevn.netbeans.genmodel;
 
 import java.util.HashSet;
 
-public class App {
+public abstract class App {
     
-    public static void fillUsedClassDao(final HashSet<String> usedClasses) {
+    private static App instance = new AppImpl();
+    
+    public static App instance() {
+        return instance;
     }
+    
+    public abstract void fillUsedClassDao(final HashSet<String> usedClasses);
+    
+    public abstract String getCodeGenClassName();
 }
