@@ -81,6 +81,18 @@ public final class DaoAction extends BaseAction {
         return fields;
     }
     
+    private Map<String, Map<String, Object>> fillFieldsCodegen(final Class cls, final Map<String, Map<String, Object>> fields) {
+        if (cls != null) {
+            for (Field f : cls.getDeclaredFields()) {
+                Map<String, Object> cg = CodegenUtil.getCodegen(App.getCodeGenClassName(), f);
+                if (cg != null && CodegenUtil.isSerchable(cg)) {
+                    fields.put(f.getName(), cg);
+                }
+            }
+        }
+        return fields;
+    }
+    
     private String getClassName(final String name, final Class nameClass) {
         if (nameClass != null) {
             return name;
@@ -252,8 +264,50 @@ public final class DaoAction extends BaseAction {
                     sb.append("                ;\n");
                 }
             }
+    /*
+    String getterPrefix () default "get";
+    String searchFieldName () default "";
+    String operation () default "";
+    String queryExpression () default "";    
+    */
+            if (queryClassNameClass != null) {
+                final Map<String, Map<String, Object>> fields = fillFieldsCodegen(queryClassNameClass, new LinkedHashMap());
+                if (fields.size() > 0) {
+                    sb.append("        wh\n");
+                    for (String k : fields.keySet()) {
+                        final Map<String, Object> cg = fields.get(k);
+                        final String entityFieldName = ggg(cg.get("searchFieldName"), "entity." + k);
+                        final String paramName = "entity" + Util.toCamelCase(k);
+                        final String operation = ggg(cg.get("operation"), "andEq");
+                        final String expression = ggg(cg.get("queryExpression"), "");
+                        final String getterPrefix = ggg(cg.get("getterPrefix"), "get"); //cg.get("getterPrefix")
+                        
+                        if (expression == null || expression.length() == 0) {
+                            if (paramName == null || paramName.length() == 0) {
+                                sb.append("                .").append(operation).append("(model.").append(getterPrefix).append(Util.toCamelCase(k)).append("(),   \"").append(entityFieldName).append("\")\n");
+                            } else {
+                                sb.append("                .").append(operation).append("(model.").append(getterPrefix).append(Util.toCamelCase(k)).append("(),   \"").append(entityFieldName).append("\",    \"").append(paramName).append("\")\n");
+                            }
+                        } else {
+                            sb.append("                .").append(operation).append("(model.").append(getterPrefix).append(Util.toCamelCase(k)).append("(),   \" ").append(expression).append(" \")\n");
+                        }
+                    }
+                    sb.append("                ;\n");
+                }
+            }
             sb.append("        // @formatter:on\n");
             sb.append("    }\n");
+    }
+    
+    private static String ggg(final Object v, final String defval) {
+        if (v == null) {
+            return defval;
+        }
+        final String ret = v.toString().trim();
+        if (ret.length() == 0) {
+            return defval;
+        }
+        return ret;
     }
 
     @Override

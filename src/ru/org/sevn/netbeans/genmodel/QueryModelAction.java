@@ -15,9 +15,7 @@
  */
 package ru.org.sevn.netbeans.genmodel;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import org.openide.awt.ActionID;
 import org.openide.awt.ActionReference;
 import org.openide.awt.ActionReferences;
@@ -44,41 +42,12 @@ public final class QueryModelAction extends BaseAction {
     protected int useField(Field f, final String clsName, final String editedFileClassName) {
         if (!excludedTypes.contains(clsName)) {
             if (isAbstract(editedFileClassName)) {
-                if (isSerchable(f)) {
+                if (CodegenUtil.isSerchable(f)) {
                     return 1;
                 }
             }
         }
         return 0;
-    }
-    
-    private boolean isSerchable(final Field f) {
-        Annotation[] annotations = f.getAnnotations();
-        //System.out.println("====1="+f.getName()+":" + annotations.length);
-        if (annotations != null) {
-            for (final Annotation a : annotations) {
-                if (a.annotationType().getName().equals("ru.sifox.objects.Codegen")) {
-                    Method[] methods = a.annotationType().getDeclaredMethods();
-                    if (methods != null) {
-                        for (final Method m : methods) {
-                            if (m.getName().equals("searchable")) {
-                                try {
-                                    Object v = m.invoke(a);
-                                    //System.out.println("====3="+v);
-                                    if (v instanceof Boolean) {
-                                        Boolean b = (Boolean)v;
-                                        return b;
-                                    }
-                                } catch (Exception ex) {
-                                }
-                            }
-                        }
-                    }
-                }
-                //System.out.println("====2="+f.getName()+":" + a + ":" + a.annotationType().getDeclaredMethods().length);
-            }
-        }
-        return false;
     }
     
     @Override

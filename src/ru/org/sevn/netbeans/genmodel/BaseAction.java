@@ -61,8 +61,13 @@ public abstract class BaseAction implements ActionListener {
             selectedStr = Util.getClipboardString();
         }
         
-        Util.setSelectedString(getFormatted(editedFile, selectedStr, Util.selectAll()));
-        EditorRegistry.lastFocusedComponent().setCaretPosition(this.caretPos);
+        final String res = getFormatted(editedFile, selectedStr, Util.selectAll());
+        if (res != null) {
+            Util.setSelectedString(res);
+        }
+        try {
+            EditorRegistry.lastFocusedComponent().setCaretPosition(this.caretPos);
+        } catch (Exception e) {}
     }
     
     @Override
@@ -293,9 +298,23 @@ public abstract class BaseAction implements ActionListener {
             sb.append("//").append(selection).append("\n");
             sb.append("//=====================end==============================\n");
             caretPos = sb.length();
-            return sb.toString() + content;
+            //TODO show dialog
+            Object askres = Util.ask("Copy result to clipboard?", sb.toString(), new Object[] { "Copy", "Append", "Insert", "Cancel" }, "Append");
+            if ( "Copy".equals(askres) ) {
+                if (!Util.setClipboardContents(sb.toString())) {
+                    return sb.toString() + content;
+                }
+            } else if ( "Append".equals(askres) ) {
+                if (!Util.appendClipboardContents(sb.toString())) {
+                    return sb.toString() + content;
+                }
+            } else if ( "Insert".equals(askres) ) {
+                return sb.toString() + content;
+            } else {
+                // return null;
+            }
         }
-        return content;
+        return null;
     }
     
     private int caretPos;

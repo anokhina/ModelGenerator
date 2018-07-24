@@ -23,6 +23,10 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import javax.swing.JButton;
+import javax.swing.JLabel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import org.netbeans.api.editor.EditorRegistry;
 import org.netbeans.api.java.classpath.ClassPath;
 import org.netbeans.api.project.FileOwnerQuery;
@@ -30,6 +34,7 @@ import org.netbeans.api.project.Project;
 import org.netbeans.api.project.ProjectUtils;
 import org.netbeans.api.project.SourceGroup;
 import org.netbeans.api.project.ui.OpenProjects;
+import org.openide.DialogDescriptor;
 import org.openide.DialogDisplayer;
 import org.openide.NotifyDescriptor;
 import org.openide.awt.StatusDisplayer;
@@ -254,6 +259,26 @@ public class Util {
         return false;
     }
 
+    public static boolean askYesNo(final String title, final String msg) {
+        NotifyDescriptor d = new NotifyDescriptor.Confirmation(msg, title, NotifyDescriptor.YES_NO_OPTION);
+        if (DialogDisplayer.getDefault().notify(d) == NotifyDescriptor.YES_OPTION) {
+            return true;
+        }
+        return false;
+    }
+    
+    public static Object ask(final String title, final String msg, final Object[] options, final Object defaultOption) {
+        JTextArea textField = new JTextArea();
+        textField.setEditable(false);
+        textField.setText(msg);
+//        textField.setLineWrap(true);
+//        textField.setWrapStyleWord(true);        
+        
+        DialogDescriptor dialogDsc = new DialogDescriptor(textField, title, true, options, defaultOption, DialogDescriptor.DEFAULT_ALIGN, null, null);
+        dialogDsc.setOptions(options);
+        return DialogDisplayer.getDefault().notify(dialogDsc);
+    }
+    
     public static void notify(final String msg) {
         DialogDisplayer.getDefault().notify(new NotifyDescriptor.Message(msg, NotifyDescriptor.INFORMATION_MESSAGE));
     }
@@ -287,16 +312,28 @@ public class Util {
         return clipboard;
     }
     
-    public static void setClipboardContents(final String content) {
+    public static boolean setClipboardContents(final String content) {
         final Clipboard clipboard = getClipboard();
         if (clipboard != null) {
             if (content == null) {
                 StatusDisplayer.getDefault().setStatusText("");
                 clipboard.setContents(null, null);
+                return true;
             } else {
                 StatusDisplayer.getDefault().setStatusText("Clipboard: " + content);
                 clipboard.setContents(new StringSelection(content), null);
+                return true;
             }
+        }
+        return false;
+    }
+    
+    public static boolean appendClipboardContents(final String content) {
+        final String oldVal = getClipboardString();
+        if (oldVal == null) {
+            return setClipboardContents(content);
+        } else {
+            return setClipboardContents(oldVal + content);
         }
     }
 }
