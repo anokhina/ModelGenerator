@@ -60,10 +60,15 @@ public abstract class BaseAction implements ActionListener {
         if (selectedStr == null || selectedStr.trim().length() == 0) {
             selectedStr = Util.getClipboardString();
         }
-        
+        final int selectionStart = EditorRegistry.lastFocusedComponent().getSelectionStart();
+        final int selectionEnd = EditorRegistry.lastFocusedComponent().getSelectionEnd();
+                
         final String res = getFormatted(editedFile, selectedStr, Util.selectAll());
         if (res != null) {
             Util.setSelectedString(res);
+        } else {
+            EditorRegistry.lastFocusedComponent().setSelectionStart(selectionStart);
+            EditorRegistry.lastFocusedComponent().setSelectionEnd(selectionEnd);
         }
         try {
             EditorRegistry.lastFocusedComponent().setCaretPosition(this.caretPos);

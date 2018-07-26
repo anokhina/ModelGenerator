@@ -23,10 +23,34 @@ import java.util.Map;
 
 public class CodegenUtil {
     /*
-    String getterPrefix () default "get";    
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+@Target (value = { ElementType.FIELD })
+@Retention (RetentionPolicy.RUNTIME)
+public @interface Codegen {
+
+    boolean searchable () default true;
+
+    String getterPrefix () default "get";
+
     String searchFieldName () default "";
+
     String operation () default "";
-    String queryExpression () default "";    
+
+    String queryExpression () default "";
+
+    String joinType () default "";
+
+    String joinEntityOrField () default "";
+
+    String joinAlias () default "";
+
+    String joinOnExpression () default "";
+
+}    
     */
     
     public static Map<String, Object> getCodegen(final String className, final Field f) {

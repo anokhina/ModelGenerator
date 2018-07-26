@@ -197,6 +197,7 @@ public final class DaoAction extends BaseAction {
             printCreate(sb, srcClassName, hasPart, fieldsCreate);
             printUpdate(sb, srcClassName, fieldsModify);
             printWhere(sb, srcClassName, queryClassName, queryClassNameClass, queryClass, fieldsCreate, fieldsModify);
+            printJoins(sb, queryClassName, queryClassNameClass);
             sb.append("\n");
             sb.append("}\n");
     }
@@ -234,7 +235,47 @@ public final class DaoAction extends BaseAction {
             sb.append("        return entity;\n");
             sb.append("    }\n");
     }
-    
+    /*
+    String joinType() default "";
+    String joinEntityOrField() default "";
+    String joinAlias() default "";
+    String joinOnExpression() default "";
+    */
+    private void printJoins(final StringBuilder sb, final String queryClassName, final Class queryClassNameClass) {
+            sb.append("\n");
+            sb.append("    @Override\n");
+            sb.append("    public void buildJoins(final Joins joins, final ").append(getClassName(queryClassName, queryClassNameClass)).append(" model) {\n");
+            sb.append("        // @formatter:off\n");
+            if (queryClassNameClass != null) {
+                final Map<String, Map<String, Object>> fields = fillFieldsCodegen(queryClassNameClass, new LinkedHashMap());
+                if (fields.size() > 0) {
+                    for (String k : fields.keySet()) {
+                        final Map<String, Object> cg = fields.get(k);
+                        final String joinType = ggg(cg.get("joinType"), "");
+                        if (joinType.length() > 0) {
+                            final String getterPrefix = ggg(cg.get("getterPrefix"), "get");
+                            final String joinEntityOrField = ggg(cg.get("joinEntityOrField"), "");
+                            final String joinAlias = ggg(cg.get("joinAlias"), "");
+                            final String joinOnExpression = ggg(cg.get("joinOnExpression"), "");
+                            if (getterPrefix.equals("is")) {
+                                sb.append("        if ( model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" () ) {\n");
+                            } else {
+                                sb.append("        if ( model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" () != null ) {\n");
+                            }
+                            if (joinOnExpression.length() == 0) {
+                                sb.append("            joins.append (new JoinField (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"));").append("\n");
+                            } else {
+                                sb.append("            joins.append (new JoinEntity (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"))").append("\n");
+                                sb.append("                .on ().append (\" ").append(joinOnExpression).append(" \");\n");
+                            }
+                            sb.append("        }\n");
+                        }
+                    }
+                }
+            }
+            sb.append("        // @formatter:on\n");
+            sb.append("    }\n");
+    }
     private void printWhere(final StringBuilder sb, final String srcClassName, final String queryClassName, final Class queryClassNameClass, final Class queryClass, final LinkedHashMap<String, String> fieldsCreate, final LinkedHashMap<String, String> fieldsModify) {
             if (queryClassNameClass == null) {
                 sb.append("//GENERATION WARNING: not found class: ").append(queryClassName).append("\n");
@@ -276,11 +317,14 @@ public final class DaoAction extends BaseAction {
                     sb.append("        wh\n");
                     for (String k : fields.keySet()) {
                         final Map<String, Object> cg = fields.get(k);
+                        final String joinType = ggg(cg.get("joinType"), "");
+                        if (joinType.length() > 0) continue;
+                        
                         final String entityFieldName = ggg(cg.get("searchFieldName"), "entity." + k);
                         final String paramName = "entity" + Util.toCamelCase(k);
                         final String operation = ggg(cg.get("operation"), "andEq");
                         final String expression = ggg(cg.get("queryExpression"), "");
-                        final String getterPrefix = ggg(cg.get("getterPrefix"), "get"); //cg.get("getterPrefix")
+                        final String getterPrefix = ggg(cg.get("getterPrefix"), "get");
                         
                         if (expression == null || expression.length() == 0) {
                             if (paramName == null || paramName.length() == 0) {
