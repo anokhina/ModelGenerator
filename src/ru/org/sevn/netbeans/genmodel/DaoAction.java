@@ -258,17 +258,24 @@ public final class DaoAction extends BaseAction {
                             final String joinAlias = ggg(cg.get("joinAlias"), "");
                             final String joinOnExpression = ggg(cg.get("joinOnExpression"), "");
                             if (getterPrefix.equals("is")) {
-                                sb.append("        if ( model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" () ) {\n");
+                                sb.append("        joins.addIf(model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" (), //test\n");
+                                //sb.append("        if ( model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" () ) {\n");
                             } else {
-                                sb.append("        if ( model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" () != null ) {\n");
+                                sb.append("        joins.add(model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" (), //test\n");
+                                //sb.append("        if ( model.").append(getterPrefix).append(Util.toCamelCase(k)).append(" () != null ) {\n");
                             }
                             if (joinOnExpression.length() == 0) {
-                                sb.append("            joins.append (new JoinField (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"));").append("\n");
+                                sb.append("                    () -> new JoinField (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"), //create").append("\n");
+                                sb.append("                    j -> {} //configure\n");
+                                //sb.append("            joins.append (new JoinField (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"));").append("\n");
                             } else {
-                                sb.append("            joins.append (new JoinEntity (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"))").append("\n");
-                                sb.append("                .on ().append (\" ").append(joinOnExpression).append(" \");\n");
+                                sb.append("                    () -> new JoinEntity (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"), //create").append("\n");
+                                sb.append("                    j -> j.on ().append (\" ").append(joinOnExpression).append(" \") //configure\n");
+                                //sb.append("            joins.append (new JoinEntity (").append(joinType).append(", \"").append(joinEntityOrField).append("\", \"").append(joinAlias).append("\"))").append("\n");
+                                //sb.append("                .on ().append (\" ").append(joinOnExpression).append(" \");\n");
                             }
-                            sb.append("        }\n");
+                            sb.append("        );\n");
+                            //sb.append("        }\n");
                         }
                     }
                 }
