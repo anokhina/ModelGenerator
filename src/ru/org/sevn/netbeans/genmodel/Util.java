@@ -88,6 +88,16 @@ public class Util {
         }
         return className;
     }
+    
+    public static String getClassNameShort(final String className, final String def) {
+        if (className != null) {
+            final int lastPoint = className.lastIndexOf(".");
+            if (lastPoint > 0) {
+                return className.substring(lastPoint + 1);
+            }
+        }
+        return def;
+    }
 
     public static Class loadClass(String name, FileObject fileInProject) throws ClassNotFoundException {
         try {

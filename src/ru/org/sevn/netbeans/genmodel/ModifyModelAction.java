@@ -34,7 +34,7 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_ModifyModelAction"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/File", position = 1429)
+    @ActionReference(path = "Menu/File", position = 1430)
     ,
   @ActionReference(path = "Toolbars/File", position = 500)
 })

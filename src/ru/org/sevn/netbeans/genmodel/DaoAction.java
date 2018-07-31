@@ -38,7 +38,7 @@ import static ru.org.sevn.netbeans.genmodel.BaseAction.excludedTypes;
         displayName = "#CTL_DaoAction"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/File", position = 1429)
+    @ActionReference(path = "Menu/File", position = 1432)
     ,
   @ActionReference(path = "Toolbars/File", position = 600)
 })

@@ -32,7 +32,7 @@ import org.openide.util.NbBundle.Messages;
         displayName = "#CTL_CreateModelAction"
 )
 @ActionReferences({
-    @ActionReference(path = "Menu/File", position = 1429, separatorBefore = 1428)
+    @ActionReference(path = "Menu/File", position = 1429)
     ,
   @ActionReference(path = "Toolbars/File", position = 500)
 })
