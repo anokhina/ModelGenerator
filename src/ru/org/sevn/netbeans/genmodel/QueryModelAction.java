@@ -52,6 +52,9 @@ public final class QueryModelAction extends BaseAction {
     
     @Override
     protected boolean hasConstructor(final String editedFileClassName) {
+        if (editedFileClassName.startsWith("Basic")) {
+            return true;
+        }
         if (isAbstract(editedFileClassName)) {
             return false;
         } 
@@ -66,7 +69,7 @@ public final class QueryModelAction extends BaseAction {
     }
     
     protected boolean isAbstract(final String editedFileClassName) {
-        return editedFileClassName.startsWith("Abstract") || editedFileClassName.endsWith("Service");
+        return editedFileClassName.startsWith("Abstract") || editedFileClassName.endsWith("Service") || editedFileClassName.startsWith("Basic") ;
     }
     
     @Override

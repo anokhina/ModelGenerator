@@ -171,8 +171,12 @@ public final class DaoAction extends BaseAction {
             }
             sb.append("\n");
             
-            final String queryClassName = "".concat("Query").concat(Util.getClassNameShort(srcClassName)).concat("Model");
-            final Class queryClassNameClass = Util.loadClassAny(packageName + "." + queryClassName, sg.getRootFolder());
+            String queryClassName = "".concat("Query").concat(Util.getClassNameShort(srcClassName)).concat("Model");
+            Class queryClassNameClass = Util.loadClassAny(packageName + "." + queryClassName, sg.getRootFolder());
+            if (queryClassNameClass == null) {
+                queryClassName = "Basic" + queryClassName;
+                queryClassNameClass = Util.loadClassAny(packageName + "." + queryClassName, sg.getRootFolder());
+            }
             
             if (editedFileClassName.startsWith("Abstract")) {
                 sb.append("public abstract class ");

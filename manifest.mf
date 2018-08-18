@@ -2,5 +2,5 @@ Manifest-Version: 1.0
 AutoUpdate-Show-In-Client: true
 OpenIDE-Module: ru.org.sevn.netbeans.genmodel
 OpenIDE-Module-Localizing-Bundle: ru/org/sevn/netbeans/genmodel/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.1.4
+OpenIDE-Module-Specification-Version: 1.1.5
 
