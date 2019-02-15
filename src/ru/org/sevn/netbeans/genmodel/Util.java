@@ -23,6 +23,9 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -227,6 +230,22 @@ public class Util {
         }
     }
 
+    public static Collection<TopComponent> getCurrentEditors() {
+        final ArrayList<TopComponent> result = new ArrayList<TopComponent>();
+        final WindowManager wm = WindowManager.getDefault();
+        for (Mode mode : wm.getModes()) {
+            if (wm.isEditorMode(mode)) {
+                //result.addAll(Arrays.asList(mode.getTopComponents())); OR even faster
+                result.addAll(Arrays.asList(wm.getOpenedTopComponents(mode)));
+            }
+        }
+        return result;
+
+//        WindowManager wm = WindowManager.getDefault();
+//        Mode editor = wm.findMode("editor");
+//        return editor.getTopComponents();
+    }
+    
     public static TopComponent getCurrentEditor() {
         WindowManager wm = WindowManager.getDefault();
         Mode editor = wm.findMode("editor");

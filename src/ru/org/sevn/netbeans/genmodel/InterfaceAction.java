@@ -42,20 +42,20 @@ import org.openide.util.Lookup;
 import org.openide.util.NbBundle.Messages;
 import static ru.org.sevn.netbeans.genmodel.BaseAction.getClassFields;
 
-@ActionID(
-        category = "File",
-        id = "ru.org.sevn.netbeans.genmodel.InterfaceAction"
-)
-@ActionRegistration(
-        iconBase = "ru/org/sevn/netbeans/genmodel/i.png",
-        displayName = "#CTL_InterfaceAction"
-)
-@ActionReferences({
-    @ActionReference(path = "Menu/File", position = 1433, separatorAfter = 1434)
-    ,
-  @ActionReference(path = "Toolbars/File", position = 600)
-})
-@Messages("CTL_InterfaceAction=Create Entity Interface")
+//@ActionID(
+//        category = "File",
+//        id = "ru.org.sevn.netbeans.genmodel.InterfaceAction"
+//)
+//@ActionRegistration(
+//        iconBase = "ru/org/sevn/netbeans/genmodel/i.png",
+//        displayName = "#CTL_InterfaceAction"
+//)
+//@ActionReferences({
+//    @ActionReference(path = "Menu/File", position = 1433, separatorAfter = 1434)
+//    ,
+//  @ActionReference(path = "Toolbars/File", position = 600)
+//})
+//@Messages("CTL_InterfaceAction=Create Entity Interface")
 public final class InterfaceAction implements ActionListener {
 
     @Override
